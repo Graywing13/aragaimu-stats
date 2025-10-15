@@ -1,28 +1,60 @@
 import { type ChangeEvent, useCallback, useMemo, useState } from "react";
-import aragai from "./../../public/aragai_screenshot.png";
-import type { Game, Team } from "../common/interfaces.ts";
+import aragai from "../assets/aragai_screenshot.png";
+import type { Game, Team } from "../common/interfaces/appInterfaces.ts";
+import type { JosephJsonEntry, PlayerAnswer } from "../common/interfaces/josephJson.ts";
+import _ from "lodash";
+import { TeamsList } from "../assets/data/teamsList.ts";
 
 function DetailedMatchReport() {
-  const [fileMap, setFileMap] = useState<{ [fileName: string]: object }>({});
+  const [fileMap, setFileMap] = useState<{ [fileName: string]: object | JosephJsonEntry[] }>({});
   const [bracketName, setBracketName] = useState("");
 
-  const teamA: Team = useMemo(() => {
-    return {
-      teamName: "Team A",
-      seed: 32, // DE bracket seed
-      isTeamA: true,
-      playerNames: ["Player 1", "Player 2"],
-    };
+  const isOfficialJson = useCallback((contents: object | object[]) => {
+    return !Array.isArray(contents);
   }, []);
 
-  const teamB: Team = useMemo(() => {
-    return {
-      teamName: "Team B",
-      seed: 17, // DE bracket seed
-      isTeamA: false,
-      playerNames: ["Player 3", "Player 4"],
-    };
-  }, []);
+  const gameTeams: Team[] = useMemo(() => {
+    const firstJson = Object.values(fileMap).at(0);
+    if (!firstJson) {
+      return [];
+    }
+    const newTeams: Team[] = [];
+    if (isOfficialJson(firstJson)) {
+      const error = "Only Joseph98's JSONs are accepted for now.";
+      alert(error);
+      return [];
+    } else {
+      handleJosephJson();
+    }
+
+    function handleJosephJson() {
+      const typedJson = firstJson as JosephJsonEntry[];
+      let playerNames = typedJson[0]["players"]?.map((answer: PlayerAnswer) => answer.name);
+      while (playerNames.length) {
+        try {
+          const newTeam = findPlayerTeam(playerNames[0]);
+          newTeams.push(newTeam);
+          playerNames = _.difference(playerNames, newTeam.playerNames);
+        } catch (e: unknown) {
+          alert(e);
+          playerNames.shift();
+        }
+      }
+    }
+
+    function findPlayerTeam(playerName: string): Team {
+      const teamInfo = TeamsList.find((t) => t.players.indexOf(playerName) > -1);
+      if (!teamInfo) {
+        throw new Error(`Could not find player "${playerName}" in this website's team info list.`);
+      }
+      return {
+        teamName: teamInfo.teamName,
+        playerNames: teamInfo.players,
+        seed: -1,
+      };
+    }
+    return newTeams;
+  }, [fileMap, isOfficialJson]);
 
   const games: Game[] = useMemo(() => {
     return [
@@ -158,6 +190,20 @@ function DetailedMatchReport() {
     [readFiles],
   );
 
+  const renderMatchDetails = useMemo(() => {
+    if (gameTeams.length < 2) {
+      return <div>Please select a (clean) Joseph JSON.</div>;
+    }
+    return (
+      <div className={"w-[640px] border-4 border-slate-300 border-dashed py-4 px-12"}>
+        <h2 className={"w-full text-center p-4 text-4xl"}>{bracketName}</h2>
+        <div className={"grid grid-rows-4 grid-flow-col"}>
+          {[...renderScoreboard(gameTeams[0], true), ...labels, renderScoreboard(gameTeams[1], false)]}
+        </div>
+      </div>
+    );
+  }, [bracketName, gameTeams, labels, renderScoreboard]);
+
   return (
     <div className={"h-full w-full flex"}>
       <div className={"bg-amber-300 flex flex-col w-1/5 p-4"}>
@@ -191,14 +237,7 @@ function DetailedMatchReport() {
           />
         </div>
       </div>
-      <div className={"w-4/5 flex justify-center"}>
-        <div className={"w-[640px] border-4 border-slate-300 border-dashed py-4 px-12"}>
-          <h2 className={"w-full text-center p-4 text-4xl"}>{bracketName}</h2>
-          <div className={"grid grid-rows-4 grid-flow-col"}>
-            {[...renderScoreboard(teamA, true), ...labels, renderScoreboard(teamB, false)]}
-          </div>
-        </div>
-      </div>
+      <div className={"w-4/5 flex justify-center"}>{renderMatchDetails}</div>
     </div>
   );
 }
