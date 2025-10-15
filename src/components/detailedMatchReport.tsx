@@ -1,44 +1,46 @@
-import { type ChangeEvent, useCallback, useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import aragai from "../assets/aragai_screenshot.png";
 import type { Game, Team } from "../common/interfaces/appInterfaces.ts";
 import type { JosephJsonEntry, PlayerAnswer } from "../common/interfaces/josephJson.ts";
 import _ from "lodash";
 import { TeamsList } from "../assets/data/teamsList.ts";
+import { getImageUrl } from "../common/util/imageUtil.ts";
 
 function DetailedMatchReport() {
   const [fileMap, setFileMap] = useState<{ [fileName: string]: object | JosephJsonEntry[] }>({});
   const [bracketName, setBracketName] = useState("");
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
 
   const isOfficialJson = useCallback((contents: object | object[]) => {
     return !Array.isArray(contents);
   }, []);
 
-  const gameTeams: Team[] = useMemo(() => {
+  useEffect(() => {
     const firstJson = Object.values(fileMap).at(0);
     if (!firstJson) {
-      return [];
+      return;
     }
-    const newTeams: Team[] = [];
     if (isOfficialJson(firstJson)) {
       const error = "Only Joseph98's JSONs are accepted for now.";
       alert(error);
-      return [];
+      setPlayerNames([]);
     } else {
-      handleJosephJson();
-    }
-
-    function handleJosephJson() {
       const typedJson = firstJson as JosephJsonEntry[];
-      let playerNames = typedJson[0]["players"]?.map((answer: PlayerAnswer) => answer.name);
-      while (playerNames.length) {
-        try {
-          const newTeam = findPlayerTeam(playerNames[0]);
-          newTeams.push(newTeam);
-          playerNames = _.difference(playerNames, newTeam.playerNames);
-        } catch (e: unknown) {
-          alert(e);
-          playerNames.shift();
-        }
+      setPlayerNames(typedJson[0]["players"]?.map((answer: PlayerAnswer) => answer.name));
+    }
+  }, [fileMap, isOfficialJson]);
+
+  const gameTeams: Team[] = useMemo(() => {
+    const newTeams: Team[] = [];
+    let unteamedPlayers = playerNames.slice();
+    while (unteamedPlayers.length) {
+      try {
+        const newTeam = findPlayerTeam(unteamedPlayers[0]);
+        newTeams.push(newTeam);
+        unteamedPlayers = _.difference(unteamedPlayers, newTeam.playerNames);
+      } catch (e: unknown) {
+        alert(e);
+        unteamedPlayers.shift();
       }
     }
 
@@ -53,8 +55,9 @@ function DetailedMatchReport() {
         seed: -1,
       };
     }
+
     return newTeams;
-  }, [fileMap, isOfficialJson]);
+  }, [playerNames]);
 
   const games: Game[] = useMemo(() => {
     return [
@@ -198,6 +201,31 @@ function DetailedMatchReport() {
     [readFiles],
   );
 
+  const pfps = useMemo(() => {
+    function renderTeam(team: Team, isTeamA: boolean) {
+      return (
+        <div className={`flex ${isTeamA ? "justify-start" : "justify-end"}`}>
+          {team.playerNames.map((name: string) => (
+            <img
+              src={getImageUrl(`pfps/${name}.webp`)}
+              alt={name}
+              key={`pfp-${name}`}
+              className={`${isTeamA ? "-scale-x-100" : ""} w-24`}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className={"flex w-full overflow-hidden justify-between items-center"}>
+        {renderTeam(gameTeams[0], true)}
+        <img src={getImageUrl("vs.jpg")} alt={"vs"} className={"w-14 h-14"} />
+        {renderTeam(gameTeams[1], false)}
+      </div>
+    );
+  }, [gameTeams]);
+
   const renderMatchDetails = useMemo(() => {
     if (gameTeams.length < 2) {
       return <div>Please select a (clean) Joseph JSON.</div>;
@@ -205,12 +233,13 @@ function DetailedMatchReport() {
     return (
       <div className={"w-[640px] border-4 border-slate-300 border-dashed py-4 px-12"}>
         <h2 className={"w-full text-center p-4 text-4xl"}>{bracketName}</h2>
+        {pfps}
         <div className={"grid grid-rows-4 grid-flow-col"}>
           {[...renderScoreboard(gameTeams[0], true), ...labels, renderScoreboard(gameTeams[1], false)]}
         </div>
       </div>
     );
-  }, [bracketName, gameTeams, labels, renderScoreboard]);
+  }, [bracketName, gameTeams, labels, pfps, renderScoreboard]);
 
   return (
     <div className={"h-full w-full flex"}>
