@@ -139,7 +139,7 @@ function DetailedMatchReport() {
     );
   }, [renderProperty]);
 
-  const readFiles = useCallback((files: FileList) => {
+  const readFiles = useCallback(async (files: FileList) => {
     const alerts: string[] = [];
     const newFileMap: { [fileName: string]: object } = {};
     for (let idx = 0; idx < files.length; idx++) {
@@ -148,26 +148,32 @@ function DetailedMatchReport() {
         alerts.push(`Bad file (${file.name}): ensure this is a .json file that can be opened.`);
         continue;
       }
-      setupFileReader(file).readAsText(file, "UTF-8");
+      try {
+        newFileMap[file.name] = await readFile(file);
+      } catch (e: unknown) {
+        alerts.push(e as string);
+      }
     }
 
-    function setupFileReader(file: File) {
+    async function readFile(file: File): Promise<object> {
       const fileReader = new FileReader();
-      fileReader.onerror = (e) => {
-        alerts.push(`Bad file (${file.name}): received error when reading file: ${e.target?.error}`);
-      };
-      fileReader.onload = (e) => {
-        if (typeof e.target?.result !== "string") {
-          alerts.push(`Bad file (${file.name}): expected to read string text but got ${typeof e.target?.result}`);
-          return;
-        }
-        try {
-          newFileMap[file.name] = JSON.parse(e.target.result);
-        } catch (error: unknown) {
-          alerts.push(`Bad file (${file.name}): received error when parsing JSON: ${JSON.stringify(error)}`);
-        }
-      };
-      return fileReader;
+      return new Promise((resolve, reject) => {
+        fileReader.onerror = (e) => {
+          reject(`Bad file (${file.name}): received error when reading file: ${e.target?.error}`);
+        };
+        fileReader.onload = (e) => {
+          if (typeof e.target?.result !== "string") {
+            reject(`Bad file (${file.name}): expected to read string text but got ${typeof e.target?.result}`);
+            return;
+          }
+          try {
+            resolve(JSON.parse(e.target.result));
+          } catch (error: unknown) {
+            reject(`Bad file (${file.name}): received error when parsing JSON: ${JSON.stringify(error)}`);
+          }
+        };
+        fileReader.readAsText(file);
+      });
     }
 
     return { alerts, newFileMap };
@@ -179,13 +185,15 @@ function DetailedMatchReport() {
         alert("0 files received. Please try again.");
         return;
       }
-      const { alerts, newFileMap } = readFiles(e.target.files);
-
-      if (alerts.length) {
-        alert(`Received the following errors:\n\n${alerts.join("\n")}\n\nPlease fix the files and try again.`);
-        return;
-      }
-      setFileMap(newFileMap);
+      readFiles(e.target.files).then(({ alerts, newFileMap }) => {
+        if (alerts.length) {
+          alert(
+            `Received the following errors:\n\n${alerts.map((a) => `- ${a}`).join("\n")}\n\nPlease fix the files and try again.`,
+          );
+        } else {
+          setFileMap(newFileMap);
+        }
+      });
     },
     [readFiles],
   );
