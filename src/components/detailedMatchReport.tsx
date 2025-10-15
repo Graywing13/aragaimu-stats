@@ -3,7 +3,7 @@ import aragai from "./../../public/aragai_screenshot.png";
 import type { Game, Team } from "../common/interfaces.ts";
 
 function DetailedMatchReport() {
-  const [fileContents, setFileContents] = useState<string[]>([]);
+  const [fileMap, setFileMap] = useState<{ [fileName: string]: object }>({});
   const [bracketName, setBracketName] = useState("");
 
   const teamA: Team = useMemo(() => {
@@ -107,20 +107,56 @@ function DetailedMatchReport() {
     );
   }, [renderProperty]);
 
-  const handleFileUpload = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    // TODO edit for multi-upload
-    const file = e.target.files?.[0];
-    if (!file || file.type !== "application/json") {
-      alert("bad file, ensure the file is json and can be opened");
-      return;
+  const readFiles = useCallback((files: FileList) => {
+    const alerts: string[] = [];
+    const newFileMap: { [fileName: string]: object } = {};
+    for (let idx = 0; idx < files.length; idx++) {
+      const file = files[idx];
+      if (file.type !== "application/json") {
+        alerts.push(`Bad file (${file.name}): ensure this is a .json file that can be opened.`);
+        continue;
+      }
+      setupFileReader(file).readAsText(file, "UTF-8");
     }
-    const fileReader = new FileReader();
-    fileReader.readAsText(file, "UTF-8");
-    fileReader.onload = (e) => {
-      console.log("e.target.result", e?.target?.result);
-      setFileContents([e?.target?.result as string]);
-    };
+
+    function setupFileReader(file: File) {
+      const fileReader = new FileReader();
+      fileReader.onerror = (e) => {
+        alerts.push(`Bad file (${file.name}): received error when reading file: ${e.target?.error}`);
+      };
+      fileReader.onload = (e) => {
+        if (typeof e.target?.result !== "string") {
+          alerts.push(`Bad file (${file.name}): expected to read string text but got ${typeof e.target?.result}`);
+          return;
+        }
+        try {
+          newFileMap[file.name] = JSON.parse(e.target.result);
+        } catch (error: unknown) {
+          alerts.push(`Bad file (${file.name}): received error when parsing JSON: ${JSON.stringify(error)}`);
+        }
+      };
+      return fileReader;
+    }
+
+    return { alerts, newFileMap };
   }, []);
+
+  const onFilesUploaded = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.length) {
+        alert("0 files received. Please try again.");
+        return;
+      }
+      const { alerts, newFileMap } = readFiles(e.target.files);
+
+      if (alerts.length) {
+        alert(`Received the following errors:\n\n${alerts.join("\n")}\n\nPlease fix the files and try again.`);
+        return;
+      }
+      setFileMap(newFileMap);
+    },
+    [readFiles],
+  );
 
   return (
     <div className={"h-full w-full flex"}>
@@ -132,14 +168,15 @@ function DetailedMatchReport() {
           <input
             id={"json-input"}
             type={"file"}
-            onChange={handleFileUpload}
+            onChange={onFilesUploaded}
             className={
               "w-full text-sm cursor-pointer py-1 px-2 rounded-md bg-slate-200 hover:bg-slate-300 transition-colors"
             }
+            multiple={true}
           />
           <textarea
             className={"bg-slate-100 text-slate-700 cursor-default border-2 rounded-sm border-slate-300"}
-            value={fileContents[0]}
+            value={JSON.stringify(fileMap)}
             readOnly={true}
           />
         </div>
