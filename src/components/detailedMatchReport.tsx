@@ -5,6 +5,7 @@ import type { JosephJsonEntry, PlayerAnswer } from "../common/interfaces/josephJ
 import _ from "lodash";
 import { TeamsList } from "../assets/data/teamsList.ts";
 import { getImageUrl } from "../common/util/imageUtil.ts";
+import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 
 const TEAM_INFO_LABELS = ["-", "DE Seed"];
 
@@ -23,8 +24,9 @@ function DetailedMatchReport() {
   const [fileMap, setFileMap] = useState<{ [fileName: string]: object | JosephJsonEntry[] }>({});
   const [bracketName, setBracketName] = useState("");
   const [playerNames, setPlayerNames] = useState<string[]>([]);
-  const [gameTeams, setGameTeams] = useState<Team[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [rowLabels, setRowLabels] = useState<string[]>([]);
+  const [matchStats, setMatchStats] = useState<Game[]>([]);
 
   const isOfficialJson = useCallback((contents: object | object[]) => {
     return !Array.isArray(contents);
@@ -45,6 +47,25 @@ function DetailedMatchReport() {
     }
   }, [fileMap, isOfficialJson]);
 
+  // TODO remove and fill out the grid instead
+  useEffect(() => {
+    console.log(matchStats);
+  }, [matchStats]);
+
+  useEffect(() => {
+    const cumulativeMatchStats: Game[] = [];
+    Object.values(fileMap).forEach((json) => {
+      if (isOfficialJson(json)) {
+        const error = "Only Joseph98's JSONs are accepted for now.";
+        alert(error);
+      } else {
+        const typedJson = json as JosephJsonEntry[];
+        cumulativeMatchStats.push(...extractJosephData(typedJson, teams));
+      }
+    });
+    setMatchStats(cumulativeMatchStats);
+  }, [fileMap, isOfficialJson, teams]);
+
   useEffect(() => {
     const newTeams: Team[] = [];
     let unteamedPlayers = playerNames.slice();
@@ -58,7 +79,7 @@ function DetailedMatchReport() {
         unteamedPlayers.shift();
       }
     }
-    setGameTeams(newTeams);
+    setTeams(newTeams);
 
     function findPlayerTeam(playerName: string): Team {
       const teamInfo = TeamsList.find((t) => t.players.indexOf(playerName) > -1);
@@ -72,57 +93,6 @@ function DetailedMatchReport() {
       };
     }
   }, [playerNames]);
-
-  const games: Game[] = useMemo(() => {
-    return [
-      {
-        teamA: {
-          score: 10,
-          rig: 10,
-          rigMissed: 0,
-          rigSniped: 4,
-          ops: 5,
-          eds: 2,
-          ins: 3,
-          avgDiff: 27.3,
-        },
-        teamB: {
-          score: 13,
-          rig: 15,
-          rigMissed: 3,
-          rigSniped: 1,
-          ops: 6,
-          eds: 6,
-          ins: 1,
-          avgDiff: 24.7,
-        },
-        metadata: { ops: 6, eds: 7, ins: 7, avgDiff: 24.4 },
-      },
-      {
-        teamA: {
-          score: 0,
-          rig: 0,
-          rigMissed: 0,
-          rigSniped: 0,
-          ops: 0,
-          eds: 0,
-          ins: 0,
-          avgDiff: undefined,
-        },
-        teamB: {
-          score: 10,
-          rig: 10,
-          rigMissed: 2,
-          rigSniped: 2,
-          ops: 0,
-          eds: 8,
-          ins: 2,
-          avgDiff: 30.5,
-        },
-        metadata: { ops: 0, eds: 10, ins: 10, avgDiff: 19.5 },
-      },
-    ];
-  }, []);
 
   const renderCell = useCallback((key: string, value: string | number, idx?: number) => {
     const className = idx === 0 ? "bg-amber-100 border-b-2 border-amber-600" : "";
@@ -158,9 +128,9 @@ function DetailedMatchReport() {
   );
 
   useEffect(() => {
-    const gameLabels = games.map((_game, idx) => `Game ${idx + 1}`);
+    const gameLabels = matchStats.map((_game, idx) => `Game ${idx + 1}`);
     setRowLabels([...TEAM_INFO_LABELS, ...gameLabels, ...TEAM_GAME_STAT_LABELS]);
-  }, [games, renderCell]);
+  }, [matchStats, renderCell]);
 
   const readFile: (file: File) => Promise<object> = useCallback(async (file: File) => {
     const fileReader = new FileReader();
@@ -224,17 +194,17 @@ function DetailedMatchReport() {
   );
 
   const jsxPfps = useMemo(() => {
-    if (!gameTeams.length) {
+    if (!teams.length) {
       return null;
     }
     return (
       <div className={"flex w-full overflow-hidden justify-between items-center"}>
-        {renderTeam(gameTeams[0], true)}
+        {renderTeam(teams[0], true)}
         <img src={getImageUrl("vs.jpg")} alt={"vs"} className={"w-14 h-14"} />
-        {renderTeam(gameTeams[1], false)}
+        {renderTeam(teams[1], false)}
       </div>
     );
-    
+
     function renderTeam(team: Team, isTeamA: boolean) {
       return (
         <div className={`flex ${isTeamA ? "justify-start" : "justify-end"}`}>
@@ -249,11 +219,11 @@ function DetailedMatchReport() {
         </div>
       );
     }
-  }, [gameTeams]);
+  }, [teams]);
 
   const jsxMatchDetails = useMemo(() => {
     const labels = rowLabels.map((label, idx) => renderCell(`label-${label}`, label, idx));
-    if (gameTeams.length < 2) {
+    if (teams.length < 2) {
       return <div>Please select a (clean) Joseph JSON.</div>;
     }
     return (
@@ -261,11 +231,11 @@ function DetailedMatchReport() {
         <h2 className={"w-full text-center p-4 text-4xl"}>{bracketName || "< input bracket >"}</h2>
         {jsxPfps}
         <div className={"grid grid-rows-12 grid-flow-col"}>
-          {[...renderScoreboard(gameTeams[0], true), ...labels, renderScoreboard(gameTeams[1], false)]}
+          {[...renderScoreboard(teams[0], true), ...labels, renderScoreboard(teams[1], false)]}
         </div>
       </div>
     );
-  }, [rowLabels, gameTeams, bracketName, jsxPfps, renderScoreboard, renderCell]);
+  }, [rowLabels, teams, bracketName, jsxPfps, renderScoreboard, renderCell]);
 
   const jsxJsonSelector = useMemo(() => {
     return (

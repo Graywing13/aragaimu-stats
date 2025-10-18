@@ -1,15 +1,18 @@
-interface GameData {
+export interface GameStats {
   ops: number;
   eds: number;
   ins: number;
-  avgDiff?: number;
 }
 
-interface TeamGameData extends GameData {
+export interface TeamGameStats {
   score: number;
   rig: number;
+  sniped: number;
   rigMissed: number;
-  rigSniped: number;
+  opsHit: number;
+  edsHit: number;
+  insHit: number;
+  totalDifficultySum: number;
 }
 
 export interface Team {
@@ -19,7 +22,6 @@ export interface Team {
 }
 
 export interface Game {
-  teamA: TeamGameData;
-  teamB: TeamGameData;
-  metadata: GameData;
+  teamsStats: TeamGameStats[];
+  metadata: GameStats;
 }
