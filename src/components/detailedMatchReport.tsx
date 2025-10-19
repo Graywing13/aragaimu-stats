@@ -8,6 +8,8 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { getImageUrl } from "../common/util/imageUtil.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 
+const SITE_VERSION = 0.1;
+
 const TEAM_INFO_LABELS = ["-", "DE Seed"];
 
 const TEAM_GAME_STAT_LABELS = [
@@ -368,6 +370,7 @@ function DetailedMatchReport() {
         <h3 className={"text-2xl pb-2 text-slate-900"}>Config</h3>
         {jsxJsonSelector}
         {jsxBracketNameInput}
+        <div className={"text-xs text-slate-900"}>version {SITE_VERSION}</div>
       </div>
       <div className={"w-4/5 flex justify-center"}>{jsxMatchDetails}</div>
     </div>
