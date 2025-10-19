@@ -111,23 +111,22 @@ function DetailedMatchReport() {
       return null;
     }
     return rowLabels.map((label, idx) => {
-      const textColour = idx === 0 ? "text-slate-100" : "";
       return (
         <div
-          className={`grid grid-cols-3 ${idx === 0 ? "bg-pink-800 border-b-2 border-pink-900" : ""}`}
+          className={`grid grid-cols-3 px-2 ${idx === 0 ? "bg-pink-800 border-b-2 border-pink-900" : ""}`}
           key={`label-${label}`}
         >
           {renderCell(
             getCellData(label, 0),
             `${teams[0].teamName}-${label}`,
-            textColour,
+            undefined,
             getSecondaryCellData(label, 0),
           )}
-          {renderCell(label, `label-${label}`, textColour)}
+          {renderCell(label, `label-${label}`, `font-semibold`)}
           {renderCell(
             getCellData(label, 1),
             `${teams[1].teamName}-${label}`,
-            textColour,
+            undefined,
             getSecondaryCellData(label, 1),
           )}
         </div>
@@ -186,9 +185,9 @@ function DetailedMatchReport() {
         <div className={`text-center ${className}`} key={key}>
           <div>
             {value}
-            {secondaryValue && <span className={"text-slate-400"}>{secondaryValue}</span>}
+            {secondaryValue && <span className={"text-slate-500 text-sm"}>{secondaryValue}</span>}
           </div>
-          {extraText && <div className={"text-xs text-slate-400"}>{extraText}</div>}
+          {extraText && <div className={"text-xs text-slate-500 font-normal"}>{extraText}</div>}
         </div>
       );
     }
@@ -290,7 +289,7 @@ function DetailedMatchReport() {
     return (
       <div className={"flex w-full overflow-hidden justify-between items-center"}>
         {renderTeam(teams[0], true)}
-        <img src={getImageUrl("vs.jpg")} alt={"vs"} className={"w-14 h-14"} />
+        <img src={getImageUrl("vs.png")} alt={"vs"} className={"w-14 h-14 invert-100"} />
         {renderTeam(teams[1], false)}
       </div>
     );
@@ -326,7 +325,7 @@ function DetailedMatchReport() {
 
   const jsxJsonSelector = useMemo(() => {
     return (
-      <div className={"w-full overflow-hidden p-2 flex flex-col gap-2"}>
+      <div className={"w-full overflow-hidden p-2 flex flex-col gap-2  text-slate-900"}>
         <label htmlFor={"json-input"}>Select JSON: </label>
         <input
           id={"json-input"}
@@ -348,7 +347,7 @@ function DetailedMatchReport() {
 
   const jsxBracketNameInput = useMemo(() => {
     return (
-      <div className={"w-full overflow-hidden p-2 flex flex-col gap-2 mt-2"}>
+      <div className={"w-full overflow-hidden p-2 flex flex-col gap-2 mt-2  text-slate-900"}>
         <label htmlFor={"bracket-name-input"}>Bracket Name: </label>
         <input
           id={"bracket-name-input"}
@@ -365,7 +364,7 @@ function DetailedMatchReport() {
     <div className={"h-full w-full flex"}>
       <div className={"w-1/5 bg-pink-100 flex flex-col p-4"}>
         <img src={aragai} alt={"Aragaimu Profile Pic"} />
-        <h3 className={"text-2xl pb-2"}>Config</h3>
+        <h3 className={"text-2xl pb-2 text-slate-900"}>Config</h3>
         {jsxJsonSelector}
         {jsxBracketNameInput}
       </div>
