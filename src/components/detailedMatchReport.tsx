@@ -1,6 +1,6 @@
 import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import aragai from "../assets/aragai_screenshot.png";
-import type { Game, Team } from "../common/interfaces/appInterfaces.ts";
+import type { Game, GameStats, Team, TeamGameStats } from "../common/interfaces/appInterfaces.ts";
 import type { JosephJsonEntry, PlayerAnswer } from "../common/interfaces/josephJson.ts";
 import _ from "lodash";
 import { TeamsList } from "../assets/data/teamsList.ts";
@@ -94,6 +94,18 @@ function DetailedMatchReport() {
     }
   }, [playerNames]);
 
+  const getGameFromLabel = useCallback(
+    (label: string): Game => {
+      const gameNumber = Number(label.split(" ")[1]);
+      if (!gameNumber) throw new Error(`Invalid game number: ${label}`);
+      const gameIdx = gameNumber - 1;
+      const game = matchStats.at(gameIdx);
+      if (!game) throw new Error(`Invalid game idx: ${gameIdx}. MatchStats length: ${matchStats.length}`);
+      return game;
+    },
+    [matchStats],
+  );
+
   const jsxScoreboard = useMemo(() => {
     if (!teams.length || !rowLabels.length || !matchStats.length) {
       return null;
@@ -101,48 +113,110 @@ function DetailedMatchReport() {
     return rowLabels.map((label, idx) => {
       const textColour = idx === 0 ? "text-slate-100" : "";
       return (
-        <div className={`grid grid-cols-3 ${idx === 0 ? "bg-pink-800 border-b-2 border-pink-900" : ""}`}>
-          {renderCell(getCellData(label, 0), `${teams[0].teamName}-${label}`, textColour)}
+        <div
+          className={`grid grid-cols-3 ${idx === 0 ? "bg-pink-800 border-b-2 border-pink-900" : ""}`}
+          key={`label-${label}`}
+        >
+          {renderCell(
+            getCellData(label, 0),
+            `${teams[0].teamName}-${label}`,
+            textColour,
+            getSecondaryCellData(label, 0),
+          )}
           {renderCell(label, `label-${label}`, textColour)}
-          {renderCell(getCellData(label, 1), `${teams[1].teamName}-${label}`, textColour)}
+          {renderCell(
+            getCellData(label, 1),
+            `${teams[1].teamName}-${label}`,
+            textColour,
+            getSecondaryCellData(label, 1),
+          )}
         </div>
       );
     });
 
     // TODO calculate remaining stats
     function getCellData(label: string, teamIdx: number) {
-      // DE Seed
-      // Game 1 Game 2 Game 3 (and respective op/ed/in distribution)
-      // Total Points
-      // Total Rig
-      // Rig Missed
-      // Rig Sniped
-      // OPs Hit
-      // EDs Hit
-      // INs Hit
-      // Avg correct difficulty
-
-      // matchStats has all the games
-      // To access game 1: matchStats[0]
-      // To access game 1, team A: matchStats[0].teamStats[teamIdx]
-      // To access game 1, team A, rig: matchStats[0].teamStats[teamIdx].rig
-
       if (label === "-") {
-        const score = matchStats.map((game) => game.teamsStats[teamIdx].ptsGain).reduce((acc, curr) => acc + curr, 0);
-        return `${teams[teamIdx].teamName} | ${score}`;
+        return teamIdx === 0
+          ? `${teams[teamIdx].teamName} | ${sumAcrossGames(teamIdx, "ptsGain")}`
+          : `${sumAcrossGames(teamIdx, "ptsGain")} | ${teams[teamIdx].teamName}`;
+      } else if (label === "DE Seed") {
+        return teams[teamIdx].seed;
+      } else if (label.startsWith("Game")) {
+        return getGameFromLabel(label).teamsStats[teamIdx].score;
+      } else if (label === "Total Points") {
+        return sumAcrossGames(teamIdx, "score");
+      } else if (label === "Total Rig") {
+        return sumAcrossGames(teamIdx, "rig");
+      } else if (label === "Rig Missed") {
+        return sumAcrossGames(teamIdx, "rigMissed");
+      } else if (label === "Rig Sniped") {
+        return sumAcrossGames(teamIdx, "sniped");
+      } else if (label === "OPs Hit") {
+        return sumAcrossGames(teamIdx, "opsHit");
+      } else if (label === "EDs Hit") {
+        return sumAcrossGames(teamIdx, "edsHit");
+      } else if (label === "INs Hit") {
+        return sumAcrossGames(teamIdx, "insHit");
+      } else if (label === "Avg correct difficulty") {
+        return round(sumAcrossGames(teamIdx, "totalDifficultySum") / sumAcrossGames(teamIdx, "score"), 3);
       } else {
         return `** ${label} **`;
       }
     }
 
-    function renderCell(value: string, key: string, className: string) {
+    function getSecondaryCellData(label: string, teamIdx: number) {
+      if (label === "Total Points") {
+        return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalSongs(["ops", "eds", "ins"]), 1)}%)`;
+      } else if (label === "Rig Sniped") {
+        return ` / ${60 - sumAcrossGames(teamIdx, "rig")}`;
+      } else if (label === "OPs Hit") {
+        return ` / ${getTotalSongs(["ops"])}`;
+      } else if (label === "EDs Hit") {
+        return ` / ${getTotalSongs(["eds"])}`;
+      } else if (label === "INs Hit") {
+        return ` / ${getTotalSongs(["ins"])}`;
+      }
+      return undefined;
+    }
+
+    function renderCell(value: string | number, key: string, className?: string, secondaryValue?: string) {
+      const extraText = getExtraText(value);
       return (
         <div className={`text-center ${className}`} key={key}>
-          {value}
+          <div>
+            {value}
+            {secondaryValue && <span className={"text-slate-400"}>{secondaryValue}</span>}
+          </div>
+          {extraText && <div className={"text-xs text-slate-400"}>{extraText}</div>}
         </div>
       );
     }
-  }, [matchStats, rowLabels, teams]);
+
+    function getExtraText(value: string | number) {
+      if (typeof value === "string" && value.startsWith("Game")) {
+        const { ops, eds, ins } = getGameFromLabel(value).metadata;
+        return `(ops: ${ops}, eds: ${eds}, ins: ${ins})`;
+      }
+    }
+
+    function sumAcrossGames(teamIdx: number, property: keyof TeamGameStats): number {
+      return sum(matchStats.map((game) => game.teamsStats[teamIdx][property]));
+    }
+
+    function getTotalSongs(songTypes: (keyof GameStats)[]) {
+      return sum(matchStats.map((game) => sum(songTypes.map((type) => game.metadata[type]))));
+    }
+
+    function sum(nums: number[]) {
+      return nums.reduce((acc, curr) => acc + curr, 0);
+    }
+
+    function round(unrounded: number, decimalPlaces: number): number {
+      const magnitude = Math.pow(10, decimalPlaces);
+      return Math.round(magnitude * unrounded) / magnitude;
+    }
+  }, [getGameFromLabel, matchStats, rowLabels, teams]);
 
   useEffect(() => {
     const gameLabels = matchStats.map((_game, idx) => `Game ${idx + 1}`);
