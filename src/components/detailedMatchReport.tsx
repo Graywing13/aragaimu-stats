@@ -122,6 +122,11 @@ function DetailedMatchReport() {
       // INs Hit
       // Avg correct difficulty
 
+      // matchStats has all the games
+      // To access game 1: matchStats[0]
+      // To access game 1, team A: matchStats[0].teamStats[teamIdx]
+      // To access game 1, team A, rig: matchStats[0].teamStats[teamIdx].rig
+
       if (label === "-") {
         const score = matchStats.map((game) => game.teamsStats[teamIdx].ptsGain).reduce((acc, curr) => acc + curr, 0);
         return `${teams[teamIdx].teamName} | ${score}`;
