@@ -169,7 +169,7 @@ function DetailedMatchReport() {
       if (label === "Total Points") {
         return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalSongs(["ops", "eds", "ins"]), 1)}%)`;
       } else if (label === "Rig Sniped") {
-        return ` / ${60 - sumAcrossGames(teamIdx, "rig")}`;
+        return ` / ${getTotalSongs(["ops", "eds", "ins"]) - sumAcrossGames(teamIdx, "rig")}`;
       } else if (label === "OPs Hit") {
         return ` / ${getTotalSongs(["ops"])}`;
       } else if (label === "EDs Hit") {
