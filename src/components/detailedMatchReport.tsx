@@ -1,5 +1,6 @@
 import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import aragai from "../assets/aragai_screenshot.png";
+import vs_png from "../assets/vs.png";
 import type { Game, GameStats, Team, TeamGameStats } from "../common/interfaces/appInterfaces.ts";
 import type { JosephJsonEntry, PlayerAnswer } from "../common/interfaces/josephJson.ts";
 import _ from "lodash";
@@ -289,7 +290,7 @@ function DetailedMatchReport() {
     return (
       <div className={"flex w-full overflow-hidden justify-between items-center"}>
         {renderTeam(teams[0], true)}
-        <img src={getImageUrl("vs.png")} alt={"vs"} className={"w-14 h-14 invert-100"} />
+        <img src={vs_png} alt={"vs"} className={"w-14 h-14 invert-100"} />
         {renderTeam(teams[1], false)}
       </div>
     );
