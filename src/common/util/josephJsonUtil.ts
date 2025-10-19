@@ -40,11 +40,23 @@ export function extractJosephData(songs: JosephJsonEntry[], teams: Team[]) {
 
   function appendGame() {
     if (currentTeamsStats && currentGameStats) {
+      currentTeamsStats[0].ptsGain = getPtsGain(currentTeamsStats[0].score, currentTeamsStats[1].score);
+      currentTeamsStats[1].ptsGain = getPtsGain(currentTeamsStats[1].score, currentTeamsStats[0].score);
       newMatchStats.push({
         teamsStats: currentTeamsStats,
         metadata: currentGameStats,
       });
     }
+  }
+
+  function getPtsGain(thisTeamScore: number, otherTeamScore: number) {
+    if (thisTeamScore > otherTeamScore) {
+      return 1;
+    }
+    if (thisTeamScore === otherTeamScore) {
+      return 0.5;
+    }
+    return 0;
   }
 
   function createBlankTeamStats(): TeamGameStats[] {
@@ -58,6 +70,7 @@ export function extractJosephData(songs: JosephJsonEntry[], teams: Team[]) {
         edsHit: 0,
         insHit: 0,
         totalDifficultySum: 0,
+        ptsGain: 0,
       };
     });
   }

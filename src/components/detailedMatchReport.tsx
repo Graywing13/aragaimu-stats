@@ -94,43 +94,55 @@ function DetailedMatchReport() {
     }
   }, [playerNames]);
 
-  const renderCell = useCallback((key: string, value: string | number, idx?: number) => {
-    const className = idx === 0 ? "bg-amber-100 border-b-2 border-amber-600" : "";
-    return (
-      <div className={`text-center ${className ?? ""}`} key={key}>
-        {value}
-      </div>
-    );
-  }, []);
+  const jsxScoreboard = useMemo(() => {
+    if (!teams.length || !rowLabels.length || !matchStats.length) {
+      return null;
+    }
+    return rowLabels.map((label, idx) => {
+      const textColour = idx === 0 ? "text-slate-100" : "";
+      return (
+        <div className={`grid grid-cols-3 ${idx === 0 ? "bg-pink-800 border-b-2 border-pink-900" : ""}`}>
+          {renderCell(getCellData(label, 0), `${teams[0].teamName}-${label}`, textColour)}
+          {renderCell(label, `label-${label}`, textColour)}
+          {renderCell(getCellData(label, 1), `${teams[1].teamName}-${label}`, textColour)}
+        </div>
+      );
+    });
 
-  // TODO render rest
-  const renderScoreboard = useCallback(
-    (team: Team, isTeamA: boolean) => {
-      const { teamName, seed } = team;
-      const title = isTeamA ? `${teamName} | ${1}` : `${2} | ${teamName}`;
-      const prefix = isTeamA ? "a-" : "b-";
-      return [
-        renderCell(`${prefix}-title`, title, 0),
-        renderCell(`${prefix}-seed`, seed),
-        renderCell(`${prefix}-g1`, "10"),
-        renderCell(`${prefix}-g2`, "14"),
-        renderCell(`${prefix}-total-pts`, "37"),
-        renderCell(`${prefix}-total-rig`, "25"),
-        renderCell(`${prefix}-rig-missed`, "0"),
-        renderCell(`${prefix}-rig-sniped`, "3"),
-        renderCell(`${prefix}-ops-hit`, "10/20"),
-        renderCell(`${prefix}-eds-hit`, "16/17"),
-        renderCell(`${prefix}-ins-hit`, "9/23"),
-        renderCell(`${prefix}-avg-correct-diff`, "26.5%"),
-      ];
-    },
-    [renderCell],
-  );
+    // TODO calculate remaining stats
+    function getCellData(label: string, teamIdx: number) {
+      // DE Seed
+      // Game 1 Game 2 Game 3 (and respective op/ed/in distribution)
+      // Total Points
+      // Total Rig
+      // Rig Missed
+      // Rig Sniped
+      // OPs Hit
+      // EDs Hit
+      // INs Hit
+      // Avg correct difficulty
+
+      if (label === "-") {
+        const score = matchStats.map((game) => game.teamsStats[teamIdx].ptsGain).reduce((acc, curr) => acc + curr, 0);
+        return `${teams[teamIdx].teamName} | ${score}`;
+      } else {
+        return `** ${label} **`;
+      }
+    }
+
+    function renderCell(value: string, key: string, className: string) {
+      return (
+        <div className={`text-center ${className}`} key={key}>
+          {value}
+        </div>
+      );
+    }
+  }, [matchStats, rowLabels, teams]);
 
   useEffect(() => {
     const gameLabels = matchStats.map((_game, idx) => `Game ${idx + 1}`);
     setRowLabels([...TEAM_INFO_LABELS, ...gameLabels, ...TEAM_GAME_STAT_LABELS]);
-  }, [matchStats, renderCell]);
+  }, [matchStats]);
 
   const readFile: (file: File) => Promise<object> = useCallback(async (file: File) => {
     const fileReader = new FileReader();
@@ -182,9 +194,8 @@ function DetailedMatchReport() {
       }
       readFiles(e.target.files).then(({ alerts, newFileMap }) => {
         if (alerts.length) {
-          alert(
-            `Received the following errors:\n\n${alerts.map((a) => `- ${a}`).join("\n")}\n\nPlease fix the files and try again.`,
-          );
+          const alertsSummary = `Received the following errors:\n\n${alerts.map((a) => `- ${a}`).join("\n")}\n\nPlease fix the files and try again.`;
+          alert(alertsSummary);
         } else {
           setFileMap(newFileMap);
         }
@@ -222,20 +233,17 @@ function DetailedMatchReport() {
   }, [teams]);
 
   const jsxMatchDetails = useMemo(() => {
-    const labels = rowLabels.map((label, idx) => renderCell(`label-${label}`, label, idx));
     if (teams.length < 2) {
-      return <div>Please select a (clean) Joseph JSON.</div>;
+      return <div>Please select a Joseph JSON.</div>;
     }
     return (
       <div className={"w-[640px] border-4 border-slate-300 border-dashed py-4 px-12"}>
         <h2 className={"w-full text-center p-4 text-4xl"}>{bracketName || "< input bracket >"}</h2>
         {jsxPfps}
-        <div className={"grid grid-rows-12 grid-flow-col"}>
-          {[...renderScoreboard(teams[0], true), ...labels, renderScoreboard(teams[1], false)]}
-        </div>
+        {jsxScoreboard}
       </div>
     );
-  }, [rowLabels, teams, bracketName, jsxPfps, renderScoreboard, renderCell]);
+  }, [teams, bracketName, jsxPfps, jsxScoreboard]);
 
   const jsxJsonSelector = useMemo(() => {
     return (
@@ -276,7 +284,7 @@ function DetailedMatchReport() {
 
   return (
     <div className={"h-full w-full flex"}>
-      <div className={"w-1/5 bg-amber-300 flex flex-col p-4"}>
+      <div className={"w-1/5 bg-pink-100 flex flex-col p-4"}>
         <img src={aragai} alt={"Aragaimu Profile Pic"} />
         <h3 className={"text-2xl pb-2"}>Config</h3>
         {jsxJsonSelector}

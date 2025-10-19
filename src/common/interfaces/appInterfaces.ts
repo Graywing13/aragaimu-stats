@@ -5,7 +5,7 @@ export interface GameStats {
 }
 
 export interface TeamGameStats {
-  score: number;
+  score: number; // in-game score
   rig: number;
   sniped: number;
   rigMissed: number;
@@ -13,6 +13,7 @@ export interface TeamGameStats {
   edsHit: number;
   insHit: number;
   totalDifficultySum: number;
+  ptsGain: number; // 1 for win, 0.5 for tie, 0 for loss
 }
 
 export interface Team {
