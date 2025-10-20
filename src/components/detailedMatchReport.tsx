@@ -10,15 +10,28 @@ import { getAvatar } from "../assets/data/avatars.ts";
 
 const SITE_VERSION = 0.6;
 
+const GAME_PREFIX = "Game";
+
+const LABEL = {
+  TOTAL_POINTS: "Total Points",
+  TOTAL_RIG: "Total Rig",
+  RIG_MISSED: "Rig Missed",
+  OFFLIST_HIT: "Offlist Hit",
+  OPS_HIT: "OPs Hit",
+  EDS_HIT: "EDs Hit",
+  INS_HIT: "INs Hit",
+  AVG_CORRECT_DIFFICULTY: "Avg correct difficulty",
+};
+
 const TEAM_GAME_STAT_LABELS = [
-  "Total Points",
-  "Total Rig",
-  "Rig Missed",
-  "Offlist Hit",
-  "OPs Hit",
-  "EDs Hit",
-  "INs Hit",
-  "Avg correct difficulty",
+  LABEL.TOTAL_POINTS,
+  LABEL.TOTAL_RIG,
+  LABEL.RIG_MISSED,
+  LABEL.OFFLIST_HIT,
+  LABEL.OPS_HIT,
+  LABEL.EDS_HIT,
+  LABEL.INS_HIT,
+  LABEL.AVG_CORRECT_DIFFICULTY,
 ];
 
 function DetailedMatchReport() {
@@ -203,25 +216,23 @@ function DetailedMatchReport() {
 
     // TODO calculate remaining stats
     function getCellData(label: string, teamIdx: number) {
-      if (label === "Team") {
-        return teams[teamIdx].teamName;
-      } else if (label.startsWith("Game")) {
+      if (label.startsWith(GAME_PREFIX)) {
         return getGameFromLabel(label).teamsStats[teamIdx].score;
-      } else if (label === "Total Points") {
+      } else if (label === LABEL.TOTAL_POINTS) {
         return sumAcrossGames(teamIdx, "score");
-      } else if (label === "Total Rig") {
+      } else if (label === LABEL.TOTAL_RIG) {
         return sumAcrossGames(teamIdx, "rig");
-      } else if (label === "Rig Missed") {
+      } else if (label === LABEL.RIG_MISSED) {
         return sumAcrossGames(teamIdx, "rigMissed");
-      } else if (label === "Offlist Hit") {
+      } else if (label === LABEL.OFFLIST_HIT) {
         return sumAcrossGames(teamIdx, "sniped");
-      } else if (label === "OPs Hit") {
+      } else if (label === LABEL.OPS_HIT) {
         return sumAcrossGames(teamIdx, "opsHit");
-      } else if (label === "EDs Hit") {
+      } else if (label === LABEL.EDS_HIT) {
         return sumAcrossGames(teamIdx, "edsHit");
-      } else if (label === "INs Hit") {
+      } else if (label === LABEL.INS_HIT) {
         return sumAcrossGames(teamIdx, "insHit");
-      } else if (label === "Avg correct difficulty") {
+      } else if (label === LABEL.AVG_CORRECT_DIFFICULTY) {
         return round(sumAcrossGames(teamIdx, "totalDifficultySum") / sumAcrossGames(teamIdx, "score"), 3);
       } else {
         return `** ${label} **`;
@@ -229,22 +240,22 @@ function DetailedMatchReport() {
     }
 
     function getSecondaryCellData(label: string, teamIdx: number) {
-      if (label === "Total Points") {
+      if (label === LABEL.TOTAL_POINTS) {
         return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalSongs(["ops", "eds", "ins"]), 1)}%)`;
-      } else if (label === "Offlist Hit") {
+      } else if (label === LABEL.OFFLIST_HIT) {
         return ` / ${getTotalSongs(["ops", "eds", "ins"]) - sumAcrossGames(teamIdx, "rig")}`;
-      } else if (label === "OPs Hit") {
+      } else if (label === LABEL.OPS_HIT) {
         return ` / ${getTotalSongs(["ops"])}`;
-      } else if (label === "EDs Hit") {
+      } else if (label === LABEL.EDS_HIT) {
         return ` / ${getTotalSongs(["eds"])}`;
-      } else if (label === "INs Hit") {
+      } else if (label === LABEL.INS_HIT) {
         return ` / ${getTotalSongs(["ins"])}`;
       }
       return undefined;
     }
 
     function renderCell(value: string | number, key: string, className?: string, secondaryValue?: string) {
-      const newSections = ["Total Points", "OPs Hit"];
+      const newSections = [LABEL.TOTAL_POINTS, LABEL.OPS_HIT];
       const lineClassName = newSections.includes(key.split("-").pop() || "") ? "border-t-2 border-black" : "";
       return (
         <div className={`text-center ${className} px-2 ${lineClassName}`} key={key}>
@@ -257,7 +268,7 @@ function DetailedMatchReport() {
     }
 
     function getExtraText(value: string | number) {
-      if (typeof value === "string" && value.startsWith("Game")) {
+      if (typeof value === "string" && value.startsWith(GAME_PREFIX)) {
         const { ops, eds, ins } = getGameFromLabel(value).metadata;
         return ` (${ops}-${eds}-${ins})*`;
       }
@@ -282,7 +293,7 @@ function DetailedMatchReport() {
   }, [getGameFromLabel, matchStats, rowLabels, teams]);
 
   useEffect(() => {
-    const gameLabels = matchStats.map((_game, idx) => `Game ${idx + 1}`);
+    const gameLabels = matchStats.map((_game, idx) => `${GAME_PREFIX} ${idx + 1}`);
     setRowLabels([...gameLabels, ...TEAM_GAME_STAT_LABELS]);
   }, [matchStats]);
 
