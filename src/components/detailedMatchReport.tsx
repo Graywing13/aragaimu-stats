@@ -8,7 +8,7 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 import { getAvatar } from "../assets/data/avatars.ts";
 
-const SITE_VERSION = 0.8;
+const SITE_VERSION = 0.9;
 
 const GAME_PREFIX = "Game";
 
@@ -205,14 +205,16 @@ function DetailedMatchReport() {
       return null;
     }
     return rowLabels.map((label, idx) => {
-      const rowStyle = idx === 0 ? "border-t-2 border-slate-600" : "";
+      const newSections = [LABEL.TOTAL_POINTS, LABEL.OPS_HIT];
+      const borderTopStyle = newSections.includes(label) ? "border-t-2 border-black" : "";
+      const rowStyle = `${borderTopStyle} ${idx === 0 ? "border-t-2 border-slate-600" : ""}`;
       return (
         <div className={`grid grid-cols-4`} key={`label-${label}`}>
           {renderDataCell(0, label, rowStyle)}
           {renderCell(
             label,
             `label-${label}`,
-            `px-2 pl-1 font-semibold col-span-2 ${rowStyle} ${getCellStyling(label)}`,
+            `px-2 pl-1 font-semibold col-span-2 ${rowStyle}`,
             getSecondaryLabel(label),
           )}
           {renderDataCell(1, label, rowStyle)}
@@ -224,7 +226,7 @@ function DetailedMatchReport() {
       const key = `${teams[teamIdx].teamName}-${label}`;
       const value = getCellData(label, teamIdx);
       const secondaryValue = getSecondaryData(label, teamIdx);
-      return renderCell(value, key, `${className} ${getCellStyling(label, teamIdx)}`, secondaryValue);
+      return renderCell(value, key, `${className}`, secondaryValue, `${getPrimaryDataStyling(label, teamIdx)}`);
     }
 
     function getCellData(label: string, teamIdx: number) {
@@ -252,7 +254,9 @@ function DetailedMatchReport() {
     }
 
     function getSecondaryData(label: string, teamIdx: number) {
-      if (label === LABEL.TOTAL_POINTS) {
+      if (label.startsWith(GAME_PREFIX)) {
+        return ` ${getGameFromLabel(label).teamsStats[teamIdx].rig}`;
+      } else if (label === LABEL.TOTAL_POINTS) {
         return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalSongs(["ops", "eds", "ins"]), 1)}%)`;
       } else if (label === LABEL.OFFLIST_HIT) {
         return ` / ${getTotalSongs(["ops", "eds", "ins"]) - sumAcrossGames(teamIdx, "rig")}`;
@@ -273,10 +277,7 @@ function DetailedMatchReport() {
       }
     }
 
-    function getCellStyling(label: string, teamIdx?: number) {
-      const newSections = [LABEL.TOTAL_POINTS, LABEL.OPS_HIT];
-      const borderTopStyle = newSections.includes(label) ? "border-t-2 border-black" : "";
-
+    function getPrimaryDataStyling(label: string, teamIdx?: number) {
       let underlineStyle = "";
       if (label.startsWith(GAME_PREFIX) && teamIdx !== undefined) {
         const otherTeamIdx = teamIdx === 0 ? 1 : 0;
@@ -285,15 +286,20 @@ function DetailedMatchReport() {
           underlineStyle = "underline";
         }
       }
-
-      return `${borderTopStyle} ${underlineStyle}`;
+      return ` ${underlineStyle}`;
     }
 
-    function renderCell(value: string | number, key: string, className?: string, secondaryValue?: string) {
+    function renderCell(
+      value: string | number,
+      key: string,
+      className?: string,
+      secondaryValue?: string,
+      primaryDataStyling?: string,
+    ) {
       return (
         <div className={`text-center px-2 ${className}`} key={key}>
           <div>
-            {value}
+            <span className={`${primaryDataStyling}`}>{value}</span>
             {secondaryValue && <span className={"text-slate-500 text-sm"}>{secondaryValue}</span>}
           </div>
         </div>
