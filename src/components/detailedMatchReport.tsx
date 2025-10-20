@@ -8,7 +8,7 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { getImageUrl } from "../common/util/imageUtil.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 
-const SITE_VERSION = 0.3;
+const SITE_VERSION = 0.4;
 
 const TEAM_INFO_LABELS = ["Team"];
 
@@ -70,7 +70,6 @@ function DetailedMatchReport() {
         cumulativeMatchStats.push(...extractJosephData(typedJson, teams));
       }
     });
-    debugger;
     setMatchStats(cumulativeMatchStats);
     setPointsResults();
 
