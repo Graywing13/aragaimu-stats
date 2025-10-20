@@ -9,7 +9,7 @@ import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 import { getAvatar } from "../assets/data/avatars.ts";
 import { getTeamSeed } from "../assets/data/seeds.ts";
 
-const SITE_VERSION = 0.1;
+const SITE_VERSION = "0.10";
 
 const GAME_PREFIX = "Game";
 
