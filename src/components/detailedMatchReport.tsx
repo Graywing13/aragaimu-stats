@@ -7,8 +7,9 @@ import _ from "lodash";
 import { TeamsList } from "../assets/data/teamsList.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 import { getAvatar } from "../assets/data/avatars.ts";
+import { getTeamSeed } from "../assets/data/seeds.ts";
 
-const SITE_VERSION = 0.9;
+const SITE_VERSION = 0.1;
 
 const GAME_PREFIX = "Game";
 
@@ -62,7 +63,6 @@ function DetailedMatchReport() {
     }
   }, [fileMap, isOfficialJson]);
 
-  // TODO remove and fill out the grid instead
   useEffect(() => {
     console.log(matchStats);
   }, [matchStats]);
@@ -125,6 +125,7 @@ function DetailedMatchReport() {
         unteamedPlayers.shift();
       }
     }
+    newTeams.sort((teamA, teamB) => teamA.seed - teamB.seed);
     setTeams(newTeams);
 
     function findPlayerTeam(playerNames: string[]): Team {
@@ -137,7 +138,7 @@ function DetailedMatchReport() {
       return {
         teamName: teamInfo.teamName,
         playerNames: caseCorrectedPlayers,
-        seed: -1,
+        seed: getTeamSeed(teamInfo.teamName),
       };
     }
   }, [playerNames]);
@@ -460,7 +461,10 @@ function DetailedMatchReport() {
           value={JSON.stringify(fileMap)}
           readOnly={true}
         />
-        <div>REFRESH before changing jsons</div>
+        <ul className={"list-disc list-inside"}>
+          <li>REFRESH before changing jsons</li>
+          <li>Everyone is seed 42 other than jlin team / shuuka team</li>
+        </ul>
       </div>
     );
   }, [fileMap, onFilesUploaded]);
