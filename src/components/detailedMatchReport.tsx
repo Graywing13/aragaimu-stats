@@ -5,12 +5,10 @@ import type { Game, GameStats, Team, TeamGameStats } from "../common/interfaces/
 import type { JosephJsonEntry, PlayerAnswer } from "../common/interfaces/josephJson.ts";
 import _ from "lodash";
 import { TeamsList } from "../assets/data/teamsList.ts";
-import { getImageUrl } from "../common/util/imageUtil.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
+import { getAvatar } from "../assets/data/avatars.ts";
 
-const SITE_VERSION = 0.5;
-
-const TEAM_INFO_LABELS = ["Team"];
+const SITE_VERSION = 0.6;
 
 const TEAM_GAME_STAT_LABELS = [
   "Total Points",
@@ -193,7 +191,7 @@ function DetailedMatchReport() {
       return null;
     }
     return rowLabels.map((label, idx) => {
-      const rowStyle = idx === 0 ? "border-y-2 border-slate-600" : "";
+      const rowStyle = idx === 0 ? "border-t-2 border-slate-600" : "";
       return (
         <div className={`grid grid-cols-4`} key={`label-${label}`}>
           {renderCell(getCellData(label, 0), `${teams[0].teamName}-${label}`, rowStyle, getSecondaryCellData(label, 0))}
@@ -285,7 +283,7 @@ function DetailedMatchReport() {
 
   useEffect(() => {
     const gameLabels = matchStats.map((_game, idx) => `Game ${idx + 1}`);
-    setRowLabels([...TEAM_INFO_LABELS, ...gameLabels, ...TEAM_GAME_STAT_LABELS]);
+    setRowLabels([...gameLabels, ...TEAM_GAME_STAT_LABELS]);
   }, [matchStats]);
 
   const readFile: (file: File) => Promise<object> = useCallback(async (file: File) => {
@@ -368,7 +366,7 @@ function DetailedMatchReport() {
             return (
               <div key={`pfp-${name}`} className={"relative"}>
                 <img
-                  src={getImageUrl(`pfps/${name}.webp`)}
+                  src={getAvatar(name)}
                   alt={name}
                   className={`w-24 ${isTeamA ? "-scale-x-100" : ""} ${isWinner(teamIdx) ? "drop-shadow-[0_35px_10px_rgba(134,16,67,0.8)]" : ""}`}
                 />
@@ -389,7 +387,7 @@ function DetailedMatchReport() {
       <div className={"w-[640px] border-4 border-slate-300 border-dashed py-4 px-12"}>
         <div className={"flex w-full justify-center align-center p-4"}>
           <img className={"h-10"} src={aragai} alt={"Aragaimu Profile Pic"} />
-          <h2 className={"text-center px-2 text-4xl"}>{bracketName || "< input bracket >"}</h2>
+          <h2 className={"text-center px-4 text-4xl"}>{bracketName || "< input bracket >"}</h2>
           <img className={"h-10"} src={aragai} alt={"Aragaimu Profile Pic"} />
         </div>
         {jsxMatchSummary}
