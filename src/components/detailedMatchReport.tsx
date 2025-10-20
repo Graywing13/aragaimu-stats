@@ -8,7 +8,7 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { getImageUrl } from "../common/util/imageUtil.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 
-const SITE_VERSION = 0.4;
+const SITE_VERSION = 0.5;
 
 const TEAM_INFO_LABELS = ["Team"];
 
@@ -196,8 +196,8 @@ function DetailedMatchReport() {
       const rowStyle = idx === 0 ? "border-y-2 border-slate-600" : "";
       return (
         <div className={`grid grid-cols-4`} key={`label-${label}`}>
-          {renderCell(label, `label-${label}`, `px-2 pl-1 font-semibold col-span-2 ${rowStyle}`, getExtraText(label))}
           {renderCell(getCellData(label, 0), `${teams[0].teamName}-${label}`, rowStyle, getSecondaryCellData(label, 0))}
+          {renderCell(label, `label-${label}`, `px-2 pl-1 font-semibold col-span-2 ${rowStyle}`, getExtraText(label))}
           {renderCell(getCellData(label, 1), `${teams[1].teamName}-${label}`, rowStyle, getSecondaryCellData(label, 1))}
         </div>
       );
@@ -249,7 +249,7 @@ function DetailedMatchReport() {
       const newSections = ["Total Points", "OPs Hit"];
       const lineClassName = newSections.includes(key.split("-").pop() || "") ? "border-t-2 border-black" : "";
       return (
-        <div className={`text-left ${className} px-2 ${lineClassName}`} key={key}>
+        <div className={`text-center ${className} px-2 ${lineClassName}`} key={key}>
           <div>
             {value}
             {secondaryValue && <span className={"text-slate-500 text-sm"}>{secondaryValue}</span>}
