@@ -8,7 +8,7 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 import { getAvatar } from "../assets/data/avatars.ts";
 
-const SITE_VERSION = 0.6;
+const SITE_VERSION = 0.7;
 
 const GAME_PREFIX = "Game";
 
@@ -207,14 +207,25 @@ function DetailedMatchReport() {
       const rowStyle = idx === 0 ? "border-t-2 border-slate-600" : "";
       return (
         <div className={`grid grid-cols-4`} key={`label-${label}`}>
-          {renderCell(getCellData(label, 0), `${teams[0].teamName}-${label}`, rowStyle, getSecondaryCellData(label, 0))}
-          {renderCell(label, `label-${label}`, `px-2 pl-1 font-semibold col-span-2 ${rowStyle}`, getExtraText(label))}
-          {renderCell(getCellData(label, 1), `${teams[1].teamName}-${label}`, rowStyle, getSecondaryCellData(label, 1))}
+          {renderDataCell(0, label, rowStyle)}
+          {renderCell(
+            label,
+            `label-${label}`,
+            `px-2 pl-1 font-semibold col-span-2 ${rowStyle} ${getCellStyling(label)}`,
+            getSecondaryLabel(label),
+          )}
+          {renderDataCell(1, label, rowStyle)}
         </div>
       );
     });
 
-    // TODO calculate remaining stats
+    function renderDataCell(teamIdx: number, label: string, className: string) {
+      const key = `${teams[teamIdx].teamName}-${label}`;
+      const value = getCellData(label, teamIdx);
+      const secondaryValue = getSecondaryData(label, teamIdx);
+      return renderCell(value, key, `${className} ${getCellStyling(label, teamIdx)}`, secondaryValue);
+    }
+
     function getCellData(label: string, teamIdx: number) {
       if (label.startsWith(GAME_PREFIX)) {
         return getGameFromLabel(label).teamsStats[teamIdx].score;
@@ -239,7 +250,7 @@ function DetailedMatchReport() {
       }
     }
 
-    function getSecondaryCellData(label: string, teamIdx: number) {
+    function getSecondaryData(label: string, teamIdx: number) {
       if (label === LABEL.TOTAL_POINTS) {
         return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalSongs(["ops", "eds", "ins"]), 1)}%)`;
       } else if (label === LABEL.OFFLIST_HIT) {
@@ -254,24 +265,38 @@ function DetailedMatchReport() {
       return undefined;
     }
 
-    function renderCell(value: string | number, key: string, className?: string, secondaryValue?: string) {
+    function getSecondaryLabel(value: string | number) {
+      if (typeof value === "string" && value.startsWith(GAME_PREFIX)) {
+        const { ops, eds, ins } = getGameFromLabel(value).metadata;
+        return ` (${ops}-${eds}-${ins})*`;
+      }
+    }
+
+    function getCellStyling(label: string, teamIdx?: number) {
       const newSections = [LABEL.TOTAL_POINTS, LABEL.OPS_HIT];
-      const lineClassName = newSections.includes(key.split("-").pop() || "") ? "border-t-2 border-black" : "";
+      const borderTopStyle = newSections.includes(label) ? "border-t-2 border-black" : "";
+
+      let underlineStyle = "";
+      if (label.startsWith(GAME_PREFIX) && teamIdx !== undefined) {
+        const otherTeamIdx = teamIdx === 0 ? 1 : 0;
+        const game = getGameFromLabel(label);
+        if (game.teamsStats[teamIdx].score >= game.teamsStats[otherTeamIdx].score) {
+          underlineStyle = "underline";
+        }
+      }
+
+      return `${borderTopStyle} ${underlineStyle}`;
+    }
+
+    function renderCell(value: string | number, key: string, className?: string, secondaryValue?: string) {
       return (
-        <div className={`text-center ${className} px-2 ${lineClassName}`} key={key}>
+        <div className={`text-center px-2 ${className}`} key={key}>
           <div>
             {value}
             {secondaryValue && <span className={"text-slate-500 text-sm"}>{secondaryValue}</span>}
           </div>
         </div>
       );
-    }
-
-    function getExtraText(value: string | number) {
-      if (typeof value === "string" && value.startsWith(GAME_PREFIX)) {
-        const { ops, eds, ins } = getGameFromLabel(value).metadata;
-        return ` (${ops}-${eds}-${ins})*`;
-      }
     }
 
     function sumAcrossGames(teamIdx: number, property: keyof TeamGameStats): number {
