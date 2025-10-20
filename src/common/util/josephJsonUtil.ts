@@ -78,7 +78,7 @@ export function extractJosephData(songs: JosephJsonEntry[], teams: Team[]) {
   function findPlayerResults(song: JosephJsonEntry, playerName: string): PlayerAnswer {
     const result = song.players.find((ans) => ans.name === playerName);
     if (!result) {
-      throw new Error(`Could not find player ${playerName} in song ${JSON.stringify(song)}`);
+      throw new Error(`Rig may be inaccurate - could not find player ${playerName} in song ${JSON.stringify(song)}`);
     }
     return result;
   }

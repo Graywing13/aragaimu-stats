@@ -8,7 +8,7 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 import { getAvatar } from "../assets/data/avatars.ts";
 
-const SITE_VERSION = 0.7;
+const SITE_VERSION = 0.8;
 
 const GAME_PREFIX = "Game";
 
@@ -90,11 +90,12 @@ function DetailedMatchReport() {
         const totalScores = [sumAcrossGames(0, "score"), sumAcrossGames(1, "score")];
         if (totalScores[0] === totalScores[1]) {
           const alertMsg = `Are you sure this match is over? \nPts differential is ${nonDifferentialedPts}. \nScore differential is ${totalScores}`;
-
           alert(alertMsg);
+          setPoints(nonDifferentialedPts);
+        } else {
+          const teamADelta = totalScores[0] > totalScores[1] ? 0.1 : -0.1;
+          setPoints([nonDifferentialedPts[0] + teamADelta, nonDifferentialedPts[1] - teamADelta]);
         }
-        const teamADelta = totalScores[0] > totalScores[1] ? 0.1 : -0.1;
-        setPoints([nonDifferentialedPts[0] + teamADelta, nonDifferentialedPts[1] - teamADelta]);
       } else {
         setPoints(nonDifferentialedPts);
       }
@@ -423,7 +424,7 @@ function DetailedMatchReport() {
       <div className={"w-[640px] border-4 border-slate-300 border-dashed py-4 px-12"}>
         <div className={"flex w-full justify-center align-center p-4"}>
           <img className={"h-10"} src={aragai} alt={"Aragaimu Profile Pic"} />
-          <h2 className={"text-center px-4 text-4xl"}>{bracketName || "< input bracket >"}</h2>
+          <h2 className={"text-center px-4 text-4xl"}>{bracketName || "** input bracket **"}</h2>
           <img className={"h-10"} src={aragai} alt={"Aragaimu Profile Pic"} />
         </div>
         {jsxMatchSummary}
