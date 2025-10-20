@@ -8,7 +8,7 @@ import { TeamsList } from "../assets/data/teamsList.ts";
 import { getImageUrl } from "../common/util/imageUtil.ts";
 import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 
-const SITE_VERSION = 0.2;
+const SITE_VERSION = 0.3;
 
 const TEAM_INFO_LABELS = ["Team"];
 
@@ -86,7 +86,7 @@ function DetailedMatchReport() {
     let unteamedPlayers = playerNames.slice();
     while (unteamedPlayers.length) {
       try {
-        const newTeam = findPlayerTeam(unteamedPlayers[0]);
+        const newTeam = findPlayerTeam(unteamedPlayers);
         newTeams.push(newTeam);
         unteamedPlayers = _.difference(unteamedPlayers, newTeam.playerNames);
       } catch (e: unknown) {
@@ -96,14 +96,16 @@ function DetailedMatchReport() {
     }
     setTeams(newTeams);
 
-    function findPlayerTeam(playerName: string): Team {
-      const teamInfo = TeamsList.find((t) => t.players.indexOf(playerName) > -1);
+    function findPlayerTeam(playerNames: string[]): Team {
+      const upperPlayerName = playerNames[0].toLocaleUpperCase();
+      const teamInfo = TeamsList.find((t) => t.players.indexOf(upperPlayerName) > -1);
       if (!teamInfo) {
-        throw new Error(`Could not find player "${playerName}" in this website's team info list.`);
+        throw new Error(`Could not find player "${playerNames[0]}" in this website's team info list.`);
       }
+      const caseCorrectedPlayers = playerNames.filter((p) => teamInfo.players.includes(p.toLocaleUpperCase()));
       return {
         teamName: teamInfo.teamName,
-        playerNames: teamInfo.players,
+        playerNames: caseCorrectedPlayers,
         seed: -1,
       };
     }
@@ -374,7 +376,7 @@ function DetailedMatchReport() {
         {jsxMatchSummary}
         {jsxPfps}
         {jsxMatchStats}
-        <div className={"w-full text-right text-sm text-slate-400 pt-4"}>* ops-eds-ins</div>
+        <div className={"w-full text-right text-sm text-slate-400 pt-4"}>* OPs-EDs-INs</div>
         <div className={"w-full text-right text-sm text-slate-400"}>Powered by Aragaimu 2025</div>
       </div>
     );
@@ -398,6 +400,7 @@ function DetailedMatchReport() {
           value={JSON.stringify(fileMap)}
           readOnly={true}
         />
+        <div>REFRESH before changing jsons</div>
       </div>
     );
   }, [fileMap, onFilesUploaded]);
