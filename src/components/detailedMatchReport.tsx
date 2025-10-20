@@ -30,7 +30,7 @@ function DetailedMatchReport() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [rowLabels, setRowLabels] = useState<string[]>([]);
   const [matchStats, setMatchStats] = useState<Game[]>([]);
-  const [scores, setScores] = useState<number[]>([]);
+  const [points, setPoints] = useState<number[]>([]);
 
   const isOfficialJson = useCallback((contents: object | object[]) => {
     return !Array.isArray(contents);
@@ -57,6 +57,9 @@ function DetailedMatchReport() {
   }, [matchStats]);
 
   useEffect(() => {
+    if (Object.values(fileMap).length === 0 || teams.length === 0) {
+      return;
+    }
     const cumulativeMatchStats: Game[] = [];
     Object.values(fileMap).forEach((json) => {
       if (isOfficialJson(json)) {
@@ -67,8 +70,25 @@ function DetailedMatchReport() {
         cumulativeMatchStats.push(...extractJosephData(typedJson, teams));
       }
     });
+    debugger;
     setMatchStats(cumulativeMatchStats);
-    setScores([sumAcrossGames(0, "ptsGain"), sumAcrossGames(1, "ptsGain")]);
+    setPointsResults();
+
+    function setPointsResults() {
+      const nonDifferentialedPts = [sumAcrossGames(0, "ptsGain"), sumAcrossGames(1, "ptsGain")];
+      if (nonDifferentialedPts[0] === nonDifferentialedPts[1]) {
+        const totalScores = [sumAcrossGames(0, "score"), sumAcrossGames(1, "score")];
+        if (totalScores[0] === totalScores[1]) {
+          const alertMsg = `Are you sure this match is over? \nPts differential is ${nonDifferentialedPts}. \nScore differential is ${totalScores}`;
+
+          alert(alertMsg);
+        }
+        const teamADelta = totalScores[0] > totalScores[1] ? 0.1 : -0.1;
+        setPoints([nonDifferentialedPts[0] + teamADelta, nonDifferentialedPts[1] - teamADelta]);
+      } else {
+        setPoints(nonDifferentialedPts);
+      }
+    }
 
     // TODO make these two functions reusable (they are used later too)
     function sumAcrossGames(teamIdx: number, property: keyof TeamGameStats): number {
@@ -125,13 +145,13 @@ function DetailedMatchReport() {
 
   const isWinner = useCallback(
     (teamIdx: number) => {
-      return Math.max(...scores) === scores[teamIdx];
+      return Math.max(...points) === points[teamIdx];
     },
-    [scores],
+    [points],
   );
 
   const jsxMatchSummary = useMemo(() => {
-    if (!teams.length || !scores.length) {
+    if (!teams.length || !points.length) {
       return null;
     }
     return (
@@ -152,7 +172,7 @@ function DetailedMatchReport() {
       );
       const jsxScore = (
         <div className={`text-5xl ${textStyle(teamIdx)} px-4`}>
-          <span>{scores[teamIdx]}</span>
+          <span>{points[teamIdx]}</span>
         </div>
       );
       const className = teamIdx === 0 ? "justify-end border-r-2" : "justify-start border-l-2";
@@ -167,7 +187,7 @@ function DetailedMatchReport() {
     function textStyle(teamIdx: number) {
       return `text-white flex ${teamIdx === 0 ? "items-end text-end" : "items-start text-start"} ${isWinner(teamIdx) ? "text-shadow-[0_0_10px_rgba(198,0,92,1)]" : ""}`;
     }
-  }, [isWinner, scores, teams]);
+  }, [isWinner, points, teams]);
 
   const jsxMatchStats = useMemo(() => {
     if (!teams.length || !rowLabels.length || !matchStats.length) {
