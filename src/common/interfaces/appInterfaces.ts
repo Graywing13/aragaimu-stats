@@ -2,6 +2,7 @@ export interface GameStats {
   ops: number;
   eds: number;
   ins: number;
+  totalDifficultySum: number;
 }
 
 export interface TeamGameStats {

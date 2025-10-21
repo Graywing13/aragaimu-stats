@@ -13,7 +13,7 @@ export function extractJosephData(songs: JosephJsonEntry[], teams: Team[]) {
   songs.forEach((song) => {
     if (song.songNumber !== prevSongNumber + 1) {
       appendGame();
-      currentGameStats = { ops: 0, eds: 0, ins: 0 };
+      currentGameStats = { ops: 0, eds: 0, ins: 0, totalDifficultySum: 0 };
       currentTeamsStats = createBlankTeamStats();
     }
 
@@ -24,6 +24,7 @@ export function extractJosephData(songs: JosephJsonEntry[], teams: Team[]) {
     );
 
     currentGameStats[songType] += 1;
+    currentGameStats.totalDifficultySum += +song.difficulty;
     currentTeamsStats.forEach((team, teamIdx) => {
       team.score += teamScoreDelta[teamIdx];
       team.rig += teamRigDelta[teamIdx];

@@ -9,7 +9,7 @@ import { extractJosephData } from "../common/util/josephJsonUtil.ts";
 import { getAvatar } from "../assets/data/avatars.ts";
 import { getTeamSeed } from "../assets/data/seeds.ts";
 
-const SITE_VERSION = "0.10";
+const SITE_VERSION = "0.11";
 
 const GAME_PREFIX = "Game";
 
@@ -258,15 +258,15 @@ function DetailedMatchReport() {
       if (label.startsWith(GAME_PREFIX)) {
         return ` ${getGameFromLabel(label).teamsStats[teamIdx].rig}`;
       } else if (label === LABEL.TOTAL_POINTS) {
-        return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalSongs(["ops", "eds", "ins"]), 1)}%)`;
+        return ` (${round((100 * sumAcrossGames(teamIdx, "score")) / getTotalGameMetadata(["ops", "eds", "ins"]), 1)}%)`;
       } else if (label === LABEL.OFFLIST_HIT) {
-        return ` / ${getTotalSongs(["ops", "eds", "ins"]) - sumAcrossGames(teamIdx, "rig")}`;
+        return ` / ${getTotalGameMetadata(["ops", "eds", "ins"]) - sumAcrossGames(teamIdx, "rig")}`;
       } else if (label === LABEL.OPS_HIT) {
-        return ` / ${getTotalSongs(["ops"])}`;
+        return ` / ${getTotalGameMetadata(["ops"])}`;
       } else if (label === LABEL.EDS_HIT) {
-        return ` / ${getTotalSongs(["eds"])}`;
+        return ` / ${getTotalGameMetadata(["eds"])}`;
       } else if (label === LABEL.INS_HIT) {
-        return ` / ${getTotalSongs(["ins"])}`;
+        return ` / ${getTotalGameMetadata(["ins"])}`;
       }
       return undefined;
     }
@@ -275,6 +275,10 @@ function DetailedMatchReport() {
       if (typeof value === "string" && value.startsWith(GAME_PREFIX)) {
         const { ops, eds, ins } = getGameFromLabel(value).metadata;
         return ` (${ops}-${eds}-${ins})*`;
+      } else if (value === LABEL.AVG_CORRECT_DIFFICULTY) {
+        const totalDifficulty = getTotalGameMetadata(["totalDifficultySum"]);
+        const totalSongs = getTotalGameMetadata(["ops", "eds", "ins"]);
+        return ` (${round(totalDifficulty / totalSongs, 1)}%)`;
       }
     }
 
@@ -311,8 +315,8 @@ function DetailedMatchReport() {
       return sum(matchStats.map((game) => game.teamsStats[teamIdx][property]));
     }
 
-    function getTotalSongs(songTypes: (keyof GameStats)[]) {
-      return sum(matchStats.map((game) => sum(songTypes.map((type) => game.metadata[type]))));
+    function getTotalGameMetadata(keysToSum: (keyof GameStats)[]) {
+      return sum(matchStats.map((game) => sum(keysToSum.map((type) => game.metadata[type]))));
     }
 
     function sum(nums: number[]) {
