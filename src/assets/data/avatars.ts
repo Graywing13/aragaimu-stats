@@ -56,7 +56,7 @@ const CUSTOM_AVATAR_URLS: { [playerName: string]: string } = {
   RINSHANTSUMO: "",
   YURIMEGURI: "",
   DOOMCHICKEN: "https://cdn.animemusicquiz.com/v1/avatars/Miyu/Spring/Flower/pink/250px/Head.webp",
-  SAKURABAROLA: "",
+  SAKURABAROLA: "https://cdn.animemusicquiz.com/v1/avatars/Miyu/Standard/No%20Hat/christmas/250px/Head.webp",
   PILE: "https://cdn.animemusicquiz.com/v1/avatars/Miyu/Ice%20Princess/Tiara/tempest/250px/Head.webp",
   MIKASAACKERMAN: "https://cdn.animemusicquiz.com/v1/avatars/Sachiko/Fall/Hat/mulled%20cider/250px/Head.webp",
   FLOTH: "https://cdn.animemusicquiz.com/v1/avatars/Saki/Standard/Bow/lines/250px/Head.webp",
