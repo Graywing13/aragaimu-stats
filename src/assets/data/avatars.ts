@@ -13,7 +13,7 @@ const CUSTOM_AVATAR_URLS: { [playerName: string]: string } = {
   ANORU_: "https://cdn.animemusicquiz.com/v1/avatars/Hikari/Standard/Glasses/black%20red/250px/Head.webp",
   IQUESTGOD: "https://cdn.animemusicquiz.com/v1/avatars/Kuriko/Fall/Hat/silver/250px/Head.webp",
   KNEESOXLUVER: "https://cdn.animemusicquiz.com/v1/avatars/Ritsu/Kitsune/pins/red/250px/Head.webp",
-  REVEL: "",
+  REVEL: "https://cdn.animemusicquiz.com/v1/avatars/Honoka/Spring/Flower/tsubaki/250px/Head.webp",
   JIINOO: "https://cdn.animemusicquiz.com/v1/avatars/Saki/Standard/Bow/black/250px/Head.webp",
   SMARTHARDYZ: "https://cdn.animemusicquiz.com/v1/avatars/Kumiko/Standard/No%20Hat/violet/250px/Head.webp",
   HOWAN: "https://cdn.animemusicquiz.com/v1/avatars/Saki/Standard/Bow/pink/250px/Head.webp",
