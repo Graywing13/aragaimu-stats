@@ -50,7 +50,7 @@ const CUSTOM_AVATAR_URLS: { [playerName: string]: string } = {
   GUA: "https://cdn.animemusicquiz.com/v1/avatars/Kaori/Standard/Hood/blue/250px/Head.webp",
   ANRI: "https://cdn.animemusicquiz.com/v1/avatars/Shiina/Cheerleader/No%20Bow/snow/250px/Head.webp",
   UFOKOIRA: "https://cdn.animemusicquiz.com/v1/avatars/Asuka/Summer/Hair%20Chain/mermaid/250px/Head.webp",
-  SUPERSJ1997: "",
+  SUPERSJ1997: "https://cdn.animemusicquiz.com/v1/avatars/Miyu/Winter/Hood/snow%20rabbit/250px/Head.webp",
   PROGENITOR: "https://cdn.animemusicquiz.com/v1/avatars/Noel/Standard/Hat/ghost/250px/Head.webp",
   CUREIDOL: "https://cdn.animemusicquiz.com/v1/avatars/Honoka/Druid/Hat/blue/250px/Head.webp",
   RINSHANTSUMO: "",
