@@ -467,7 +467,7 @@ function DetailedMatchReport() {
         />
         <ul className={"list-disc list-inside"}>
           <li>REFRESH before changing jsons</li>
-          <li>Everyone is seed 42 other than jlin team / shuuka team</li>
+          <li>Everyone is seed 42 other than the T32 teams</li>
         </ul>
       </div>
     );
