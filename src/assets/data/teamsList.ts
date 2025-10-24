@@ -192,7 +192,7 @@ export const TeamsList: TeamInfo[] = [
   { teamName: "Yakiniku Tabetai", players: ["TOMOKARIN", "AMEHANEYUKI"] },
   { teamName: "You are gay", players: ["MAYOTTATOKI", "HIHI"] },
   { teamName: "Yumekawa Galaxy", players: ["SOREIYU", "DOMI"] },
-  { teamName: "yynStack", players: ["ZEPHANIJONG", "ANOTHERWISH"] },
+  { teamName: "yynStack", players: ["WORRYLOVE", "ANOTHERWISH"] },
   { teamName: "Zero", players: ["VMIKEY", "SWAGKING"] },
   { teamName: "βίος", players: ["KUROPICA", "VIP_IN"] },
 ];
